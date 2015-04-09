@@ -92,10 +92,10 @@ class Pickle(FileBase):
     """Store most any Python object in a Python-only binary format.
     """
     def read(self):
-        with open(self.filepath, 'r') as f:
+        with open(self.filepath, 'rb') as f:
             return cPickle.load(f)
 
     def save(self, data):
         self._mkdir()
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, 'wb') as f:
             cPickle.dump(data, f)
