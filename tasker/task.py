@@ -11,8 +11,9 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
-import exceptions, os, sys
+import six
+from functools import reduce
+import os, sys
 import inspect, contextlib, functools
 from collections import OrderedDict
 from warnings import warn
@@ -26,7 +27,10 @@ from .progress import Progress, DEFAULT_STATUS_FILE, DEFAULT_STATUS_DIR
 from . import debug
 from .debug import tasker_traceback
 
-class LockException(exceptions.IOError):
+if six.PY2:
+    from exceptions import IOError
+
+class LockException(IOError):
     pass
 
 
@@ -59,7 +63,7 @@ def _nestmap(fcn, data_part):
         except:  # Hide ourselves, and the dict comprehension
             if debug.EDIT_TRACEBACKS:
                 typ, val, tb = sys.exc_info()
-                raise typ, val, tb.tb_next.tb_next
+                six.reraise(typ, val, tb.tb_next.tb_next)
             else:
                 raise
     elif isinstance(data_part, (list, tuple)):
@@ -70,7 +74,7 @@ def _nestmap(fcn, data_part):
         except:  # Remove ourselves from the traceback
             if debug.EDIT_TRACEBACKS:
                 typ, val, tb = sys.exc_info()
-                raise typ, val, tb.tb_next
+                six.reraise(typ, val, tb.tb_next)
             else:
                 raise
 
@@ -121,7 +125,7 @@ class TaskUnit(object):
         self.p = self.tasker.p # This directory will always be my working dir
         self._outs_as_given = outs
         self.outs = _listify(outs)
-        self.output_files = map(self._get_filename, self.outs)
+        self.output_files = list(map(self._get_filename, self.outs))
         self._ins_as_given = ins
         self.ins = _listify(ins)
         self.input_files, self.input_tasks = self._flatten_dependencies()
@@ -146,7 +150,11 @@ class TaskUnit(object):
 
         Tasks are resolved into their outputs. FileBase instances become their contents. 
         """
-        if isinstance(data_part, (str, unicode, Path)): # Literal filename
+        if six.PY2:
+            unicode_var = unicode
+        else:
+            unicode_var = str
+        if isinstance(data_part, (str, unicode_var, Path)): # Literal filename
             return self._get_filename(data_part)
         elif isinstance(data_part, FileBase): # Formatted file
             return data_part.read()
@@ -157,7 +165,7 @@ class TaskUnit(object):
             except:  # Remove ourselves from the traceback
                 if debug.EDIT_TRACEBACKS:
                     typ, val, tb = sys.exc_info()
-                    raise typ, val, tb.tb_next
+                    six.reraise(typ, val, tb.tb_next)
                 else:
                     raise
         else:
@@ -174,7 +182,7 @@ class TaskUnit(object):
             else:
                 files.add(v)  # Could be a filename or a FileBase instance
         # Make file paths relative to my working dir.
-        return map(self._get_filename, files), list(tasks)
+        return list(map(self._get_filename, files)), list(tasks)
 
     def _flatten_dependencies_recurse(self, in_part):
         """Walks the 'self.ins' data structure, collecting objects."""
@@ -219,7 +227,7 @@ class TaskUnit(object):
                 # Remove ourselves from the call stack
                 if debug.EDIT_TRACEBACKS:
                     typ, val, tb = sys.exc_info()
-                    raise typ, val, tb.tb_next
+                    six.reraise(typ, val, tb.tb_next)
                 else:
                     raise
             return ins  # Task function will run with this input
@@ -370,7 +378,7 @@ class TaskUnit(object):
                 # Hide run() in the call stack
                 if debug.EDIT_TRACEBACKS:
                     typ, val, tb = sys.exc_info()
-                    raise typ, val, tb.tb_next
+                    six.reraise(typ, val, tb.tb_next)
                 else:
                     raise
 
@@ -444,7 +452,7 @@ class TaskUnitNoStore(TaskUnit):
             # Hide __call__() in the call stack
             if debug.EDIT_TRACEBACKS:
                 typ, val, tb = sys.exc_info()
-                raise typ, val, tb.tb_next
+                six.reraise(typ, val, tb.tb_next)
             else:
                 raise
 
@@ -524,7 +532,7 @@ class Tasker(DirBase):
                     # Hide this wrapper function in the call stack
                     if debug.EDIT_TRACEBACKS:
                         typ, val, tb = sys.exc_info()
-                        raise typ, val, tb.tb_next
+                        six.reraise(typ, val, tb.tb_next)
                     else:
                         raise
 
@@ -595,9 +603,9 @@ class Tasker(DirBase):
         """List tasks, statuses, and descriptions.
         
         Tasks are displayed in the order added."""
-        print 'Tasks for %s:' % self.p
+        six.print_('Tasks for %s:' % self.p)
         if not len(self.tasks):
-            print 'No tasks defined.'
+            six.print_( 'No tasks defined.')
             return
         tasknames = self.tasks.keys()
         donestrings = ['+' if t.is_current() else '' for t in self.tasks.values()]
@@ -605,9 +613,9 @@ class Tasker(DirBase):
                 for t in self.tasks.values()]
         maxname = max(map(len, tasknames))
         width = 80  # Width of display
-        print '{0:^5} {1:<{maxname}}  {2:<{descwidth}}'.format('Done?', 'Name', 'Description',
-                maxname=maxname, descwidth=width - 8 - maxname)
-        print '-' * width
+        six.print_('{0:^5} {1:<{maxname}}  {2:<{descwidth}}'.format('Done?', 'Name', 'Description',
+                maxname=maxname, descwidth=width - 8 - maxname))
+        six.print_('-' * width)
         for done, name, desc in zip(donestrings, tasknames, doclines):
-            print '{0:^5} {1:<{maxname}}  {2:<{descwidth}}'.format(done, name, desc,
-                    maxname=maxname, descwidth=width - 8 - maxname)
+            six.print_('{0:^5} {1:<{maxname}}  {2:<{descwidth}}'.format(done, name, desc,
+                    maxname=maxname, descwidth=width - 8 - maxname))

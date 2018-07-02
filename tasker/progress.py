@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 """Support functions for communicating worker status."""
-
+import six
 import os, json, time, datetime
 import signal
 import numpy as np
@@ -84,7 +84,7 @@ class Monitor(object):
         except KeyboardInterrupt:
             IPython.display.clear_output()
             IPython.display.display_html(sb.to_html(na_rep=''), raw=True)
-            print 'Last update: ' + datetime.datetime.now().strftime('%c')
+            six.print_('Last update: ' + datetime.datetime.now().strftime('%c'))
             return
 
 class StatusFile(object):

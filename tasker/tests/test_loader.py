@@ -2,11 +2,10 @@ import os
 import tempfile, unittest
 from path import Path
 from tasker import loader
-
 basedir = Path.getcwd()
 mypath = Path(__file__)
 sample_taskfile = mypath.dirname() / 'sample_taskfile.py'
-
+print(loader)
 class loadertests(unittest.TestCase):
     def setUp(self):
         os.chdir(basedir)
