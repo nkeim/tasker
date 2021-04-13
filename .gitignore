@@ -1,3 +1,4 @@
 tasker.egg-info/*
 .ipynb_checkpoints
 lastfailed
+.DS_Store

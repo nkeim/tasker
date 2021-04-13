@@ -11,12 +11,15 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
+import six
 import os
-import cPickle
 import json
 from path import Path
 
+if six.PY2:
+    import cPickle
+else:
+    import _pickle as cPickle
 __all__ = ['Pandas', 'JSON', 'Pickle']
 
 class FileBase(object):
@@ -92,10 +95,10 @@ class Pickle(FileBase):
     """Store most any Python object in a Python-only binary format.
     """
     def read(self):
-        with open(self.filepath, 'r') as f:
+        with open(self.filepath, 'rb') as f:
             return cPickle.load(f)
 
     def save(self, data):
         self._mkdir()
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, 'wb') as f:
             cPickle.dump(data, f)

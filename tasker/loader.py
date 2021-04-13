@@ -11,7 +11,7 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-
+import six
 import imp, hashlib, sys
 from path import Path
 
@@ -47,8 +47,8 @@ def taskmod(directory='.', taskfile='taskfile.py', taskfile_sub='taskfile_sub.py
     tf = which(directory, taskfile=taskfile, taskfile_sub=taskfile_sub)
     dirpath = Path(directory).abspath()
     # Assign a unique module name, to avoid trouble
-    tf_hash = hashlib.sha1(str(tf) + str(dirpath)).hexdigest()[:10]
-    return imp.load_source('_taskfile_' + tf_hash, tf)
+    tf_hash = hashlib.sha1((str(tf) + str(dirpath)).encode()).hexdigest()[:10]
+    return imp.load_source('_taskfile_' + tf_hash, str(tf))
 
 def which(directory='.', taskfile='taskfile.py', taskfile_sub='taskfile_sub.py'):
     """Returns path to the Python file defining tasker tasks for 'directory'.

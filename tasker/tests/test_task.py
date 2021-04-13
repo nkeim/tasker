@@ -1,3 +1,4 @@
+import six
 import os
 import tempfile, unittest
 from path import Path
@@ -10,6 +11,8 @@ def test_uniq():
     testdat = [0, 1, 1, 3, 7, 7, 7, 10, 10]
     from_uniq = task._uniq(testdat)
     from_sort = sorted(list(set(testdat)))
+    def cmp(a, b):
+        return (a<b)-(a>b)
     if cmp(from_uniq, from_sort) != 0:
         raise AssertionError('%r != %r' % (from_uniq, from_sort))
 
@@ -248,7 +251,7 @@ class TestNewStyleTasks(TestTask):
         a no-store task.
         """
         assert self.task.gapped() == self.task.conf['two']
-        self.task.conf['two'] = 100
+        self.task.conf['two'] = str(100)
         self.task.two.clear()
         assert self.task.gapped() == self.task.conf['two']
 
@@ -320,11 +323,13 @@ class TestNewStyleTasks(TestTask):
         def missing_dependency(tsk, missing_file=missing_file):
             return missing_file
         assert not self.task.missing_dependency.is_current()  # Direct file dependency
-
+        
         @self.task
         def child_of_missing_dependency(tsk, missing_dep=missing_dependency):
             return missing_dep
+        #assert self.task.child_of_missing_dependency +1
         assert not self.task.child_of_missing_dependency.is_current()
+
 
 
     def test_missing_file_disaster(self):

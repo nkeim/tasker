@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 # FIXME: No test coverage
-
+import six
 from path import Path
 
 from .base import cachedprop
